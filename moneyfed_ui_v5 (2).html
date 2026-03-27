@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moneyfeed — InCred Money · 26 Mar 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f2f4f8;
+    --white: #ffffff;
+    --border: #e3e8f0;
+    --accent: #1a6bff;
+    --accent-light: #e8f0ff;
+    --green: #00b870;
+    --green-light: #e6f7f1;
+    --red: #ef4444;
+    --red-light: #fef2f2;
+    --gold: #f59e0b;
+    --gold-light: #fef3c7;
+    --purple: #7c3aed;
+    --purple-light: #ede9fe;
+    --orange: #f97316;
+    --text: #0d1421;
+    --text2: #4b5a72;
+    --muted: #94a3b8;
+    --heading: 'Syne', sans-serif;
+    --body: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: var(--body); max-width: 480px; margin: 0 auto; min-height: 100vh; }
+
+  /* ── NAV ── */
+  .nav { background: var(--white); padding: 14px 16px 0; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
+  .nav-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .nav-logo { font-family: var(--heading); font-size: 18px; font-weight: 800; }
+  .nav-logo span { color: var(--accent); }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .update-badge { font-size: 10px; font-weight: 600; color: var(--green); background: var(--green-light); border-radius: 20px; padding: 3px 8px; display: flex; align-items: center; gap: 4px; }
+  .dot-live { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .nav-avatar { width: 30px; height: 30px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; }
+  .tabs { display: flex; gap: 20px; }
+  .tab { font-size: 13px; font-weight: 500; color: var(--muted); padding-bottom: 10px; cursor: pointer; position: relative; white-space: nowrap; }
+  .tab.active { color: var(--accent); font-weight: 600; }
+  .tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--accent); border-radius: 2px; }
+
+  /* ── SMART PICKS ── */
+  .section-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 14px 8px; }
+  .section-title { font-family: var(--heading); font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+  .section-sub { font-size: 11px; color: var(--muted); }
+
+  /* Efficiency info pill — tappable */
+  .eff-info-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 600; color: var(--purple);
+    background: var(--purple-light); border-radius: 20px;
+    padding: 3px 9px; cursor: pointer; border: none;
+    font-family: var(--body); transition: opacity 0.15s;
+  }
+  .eff-info-pill:hover { opacity: 0.8; }
+
+  /* Efficiency explainer card */
+  .eff-explainer {
+    display: none;
+    margin: 0 14px 10px;
+    background: var(--white);
+    border: 1.5px solid var(--purple-light);
+    border-radius: 12px;
+    padding: 14px 16px;
+    animation: fadeSlide 0.2s ease both;
+  }
+  .eff-explainer.open { display: block; }
+  .eff-explainer-title {
+    font-family: var(--heading); font-size: 13px; font-weight: 800;
+    color: var(--purple); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+  }
+  .eff-explainer-body { font-size: 12px; color: var(--text2); line-height: 1.6; margin-bottom: 10px; }
+  .eff-formula {
+    background: var(--bg); border-radius: 8px; padding: 10px 12px;
+    font-family: var(--mono); font-size: 12px; color: var(--text);
+    border: 1px solid var(--border); margin-bottom: 10px;
+    line-height: 1.7;
+  }
+  .eff-examples { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .eff-ex {
+    background: var(--bg); border-radius: 8px; padding: 8px 10px;
+    border: 1px solid var(--border);
+  }
+  .eff-ex-label { font-size: 9px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .eff-ex-nums { font-family: var(--mono); font-size: 11px; color: var(--text2); line-height: 1.6; }
+  .eff-ex-score { font-family: var(--heading); font-size: 14px; font-weight: 800; margin-top: 2px; }
+  .eff-close { float: right; font-size: 11px; color: var(--muted); cursor: pointer; font-weight: 600; background: none; border: none; font-family: var(--body); }
+
+  /* ── CAROUSEL ── */
+  .carousel { display: flex; gap: 10px; padding: 0 14px 4px; overflow-x: auto; scrollbar-width: none; }
+  .carousel::-webkit-scrollbar { display: none; }
+  .smart-card {
+    flex: 0 0 200px; background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px; position: relative; overflow: hidden;
+    cursor: pointer; transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .smart-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.09); }
+  .smart-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .sc-c1::before { background: linear-gradient(90deg,#00b870,#1a6bff); }
+  .sc-c2::before { background: linear-gradient(90deg,#7c3aed,#db2777); }
+  .sc-c3::before { background: linear-gradient(90deg,#f59e0b,#f97316); }
+  .sc-c4::before { background: linear-gradient(90deg,#1a6bff,#06b6d4); }
+  .sc-c5::before { background: linear-gradient(90deg,#ef4444,#f97316); }
+  .sc-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 700; letter-spacing: 0.4px; border-radius: 20px; padding: 2px 7px; margin-bottom: 8px; }
+  .sc-instr-name { font-family: var(--heading); font-size: 13px; font-weight: 800; line-height: 1.25; margin-bottom: 1px; letter-spacing: -0.2px; }
+  .sc-symbol-small { font-family: var(--mono); font-size: 9px; color: var(--muted); margin-bottom: 8px; }
+  .sc-return { font-family: var(--heading); font-size: 26px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+  .sc-meta-row { display: flex; align-items: center; gap: 5px; margin-top: 6px; }
+  .sc-type-tag { font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
+  .tag-ce { background: var(--green-light); color: var(--green); }
+  .tag-pe { background: var(--red-light); color: var(--red); }
+  .tag-intraday { background: var(--accent-light); color: var(--accent); }
+  .sc-eff-chip {
+    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    background: var(--purple-light); color: var(--purple);
+    border-radius: 4px; padding: 2px 5px;
+  }
+  .sc-narrative { font-size: 10px; color: var(--text2); line-height: 1.45; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); font-style: italic; }
+
+  /* ── FEED AREA TOGGLE (Following / Top 20) ── */
+  .feed-toggle { margin: 10px 14px 0; display: flex; background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 3px; }
+  .toggle-btn { flex: 1; text-align: center; font-size: 12px; font-weight: 500; padding: 7px 0; border-radius: 7px; cursor: pointer; transition: all 0.2s; color: var(--muted); }
+  .toggle-btn.active { background: var(--accent); color: #fff; font-weight: 700; box-shadow: 0 2px 8px rgba(26,107,255,0.25); }
+
+  /* ── LEADERBOARD SUB-TABS ── */
+  .lb-tabs {
+    display: flex; margin: 10px 14px 0;
+    background: var(--bg); border-radius: 10px; padding: 3px;
+    border: 1px solid var(--border);
+  }
+  .lb-tab {
+    flex: 1; text-align: center; font-size: 11px; font-weight: 600;
+    padding: 7px 4px; border-radius: 7px; cursor: pointer;
+    transition: all 0.2s; color: var(--muted); line-height: 1.3;
+  }
+  .lb-tab.active { background: var(--white); color: var(--text); box-shadow: 0 1px 6px rgba(0,0,0,0.08); }
+  .lb-tab span { display: block; font-size: 9px; font-weight: 500; color: var(--muted); margin-top: 1px; }
+  .lb-tab.active span { color: var(--accent); }
+
+  /* ── DATE STRIP ── */
+  .date-strip { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px 6px; }
+  .date-label { font-family: var(--heading); font-size: 12px; font-weight: 700; }
+  .trade-count { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+
+  /* ── TRADE CARDS ── */
+  .feed { padding: 0 14px 90px; }
+  .feed-pane { display: none; }
+  .feed-pane.active { display: block; }
+
+  .trade-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; overflow: hidden; cursor: pointer; transition: box-shadow 0.2s; }
+  .trade-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
+  .tc-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px 0; }
+  .tc-avatar { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0; font-family: var(--heading); }
+  .tc-meta { flex: 1; min-width: 0; }
+  .tc-name-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .tc-username { font-size: 13px; font-weight: 700; color: var(--text); }
+  .tc-rank-badge { font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 10px; }
+  .badge-gold { background: var(--gold-light); color: var(--gold); }
+  .badge-silver { background: #f1f5f9; color: #64748b; }
+  .badge-bronze { background: #fff7ed; color: #c2410c; }
+  .badge-rank { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+  .tc-sub { font-size: 10px; color: var(--muted); margin-top: 1px; font-family: var(--mono); }
+  .tc-return-big { font-family: var(--heading); font-size: 18px; font-weight: 800; color: var(--green); flex-shrink: 0; }
+  .tc-narrative { font-size: 12px; color: var(--text2); line-height: 1.5; padding: 8px 14px 10px; font-style: italic; border-bottom: 1px solid var(--border); }
+  .tc-box { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .tc-instr-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+  .tc-instr-full { font-family: var(--heading); font-size: 14px; font-weight: 800; letter-spacing: -0.2px; line-height: 1.2; color: var(--text); }
+  .tc-instr-meta { display: flex; align-items: center; gap: 5px; margin-top: 3px; }
+  .tc-symbol-tag { font-family: var(--mono); font-size: 9px; color: var(--muted); background: var(--bg); border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; }
+  .tc-instr-type { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+  .tc-pnl-block { text-align: right; flex-shrink: 0; }
+  .tc-pnl-label { font-size: 9px; color: var(--muted); margin-bottom: 2px; }
+  .tc-pnl-val { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--green); }
+  .tc-stats-row { display: flex; gap: 18px; }
+  .tc-stat-lbl { font-size: 9px; color: var(--muted); margin-bottom: 2px; }
+  .tc-stat-val { font-size: 12px; font-weight: 600; color: var(--text); }
+
+  /* Footer — no comments, just follow + likes + eff */
+  .tc-foot { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; }
+  .follow-btn { font-size: 11px; font-weight: 700; padding: 5px 14px; border-radius: 20px; border: 1.5px solid var(--accent); color: var(--accent); background: transparent; cursor: pointer; transition: all 0.2s; font-family: var(--body); }
+  .follow-btn:hover { background: var(--accent); color: #fff; }
+  .follow-btn.following { background: var(--accent); color: #fff; }
+  .tc-foot-meta { display: flex; gap: 8px; align-items: center; }
+  .tc-foot-stat { font-size: 10px; color: var(--muted); }
+  .eff-chip {
+    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    background: var(--purple-light); color: var(--purple);
+    border-radius: 4px; padding: 2px 6px; cursor: pointer;
+    border: none; font-family: var(--mono);
+  }
+  .eff-chip:hover { opacity: 0.8; }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: var(--white); border-top: 1px solid var(--border); display: flex; padding: 10px 0 18px; z-index: 100; }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+  .nav-icon { font-size: 19px; }
+  .nav-label { font-size: 9px; color: var(--muted); font-weight: 500; }
+  .nav-item.active .nav-label { color: var(--accent); font-weight: 700; }
+
+  /* ── SUGGESTED TRADERS ── */
+  .suggested-wrap {
+    margin: 0 14px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .sug-card {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .sug-card:last-child { border-bottom: none; }
+  .sug-card:hover { background: var(--bg); }
+  .sug-avatar {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; color: #fff;
+    flex-shrink: 0; font-family: var(--heading);
+  }
+  .sug-info { flex: 1; min-width: 0; }
+  .sug-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .sug-meta { font-size: 10px; color: var(--muted); font-family: var(--mono); margin-top: 1px; }
+  .sug-stat { font-size: 10px; color: var(--text2); margin-top: 2px; }
+  .sug-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+  .sug-trades { font-size: 10px; color: var(--muted); font-family: var(--mono); }
+  .sug-follow-btn {
+    font-size: 11px; font-weight: 700;
+    padding: 5px 14px; border-radius: 20px;
+    border: 1.5px solid var(--accent);
+    color: var(--accent); background: transparent;
+    cursor: pointer; transition: all 0.2s; font-family: var(--body);
+    white-space: nowrap;
+  }
+  .sug-follow-btn:hover { background: var(--accent); color: #fff; }
+  .sug-follow-btn.following {
+    background: var(--accent); color: #fff;
+    border-color: var(--accent);
+  }
+
+  .av-1{background:linear-gradient(135deg,#1a6bff,#7c3aed)}
+  .av-2{background:linear-gradient(135deg,#7c3aed,#db2777)}
+  .av-3{background:linear-gradient(135deg,#00b870,#1a6bff)}
+  .av-4{background:linear-gradient(135deg,#f59e0b,#f97316)}
+  .av-5{background:linear-gradient(135deg,#ef4444,#f97316)}
+  .av-6{background:linear-gradient(135deg,#06b6d4,#1a6bff)}
+  .av-7{background:linear-gradient(135deg,#00b870,#06b6d4)}
+  .av-8{background:linear-gradient(135deg,#f59e0b,#00b870)}
+
+  @keyframes fadeSlide { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .trade-card { animation: fadeSlide 0.22s ease both; }
+  .trade-card:nth-child(2){animation-delay:.04s}
+  .trade-card:nth-child(3){animation-delay:.08s}
+  .trade-card:nth-child(4){animation-delay:.12s}
+  .trade-card:nth-child(5){animation-delay:.16s}
+  .trade-card:nth-child(6){animation-delay:.20s}
+  .trade-card:nth-child(7){animation-delay:.24s}
+  .trade-card:nth-child(8){animation-delay:.28s}
+  .trade-card:nth-child(9){animation-delay:.32s}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-top">
+    <div class="nav-logo">money<span>feed</span></div>
+    <div class="nav-right">
+      <div class="update-badge"><span class="dot-live"></span>26 Mar 2026</div>
+      <div class="nav-avatar">R</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab">Following</div>
+    <div class="tab active">Top trades</div>
+  </div>
+</div>
+
+<!-- TODAY'S TOP 10 HEADER -->
+<div class="section-head">
+  <div class="section-title">🔥 Today's Top 10</div>
+  <div style="font-size:11px;color:var(--muted);">Ranked by % return · Swipe →</div>
+</div>
+
+<!-- TOP 10 CAROUSEL — real data, top 10 by Return % from 26 Mar 2026 -->
+<div class="carousel">
+
+  <!-- #1 @spread_king_59 BSXOPT PE +123.27% -->
+  <div class="smart-card sc-c1">
+    <div class="sc-badge" style="background:var(--gold-light);color:var(--gold)">🥇 #1 Today</div>
+    <div class="sc-instr-name">BSE Sensex Options</div>
+    <div class="sc-symbol-small">BSXOPT · BFO · PE · @spread_king_59</div>
+    <div class="sc-return" style="color:var(--green)">+123.27%</div>
+    <div class="sc-meta-row">
+      <span class="sc-type-tag tag-pe">PE</span>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">₹14.74 → ₹32.91</span>
+    </div>
+    <div class="sc-narrative">"Sensex PE at ₹14.74 → ₹32.91 (+123%). Macro trigger: US-Iran ceasefire signals drove Sensex up 1.6% with sharp intraday two-way swings — ideal for PE premium expansion near 75,200 strike."</div>
+  </div>
+
+  <!-- #2 @scalp_lord_73 BSXOPT CE +31.35% -->
+  <div class="smart-card sc-c2">
+    <div class="sc-badge" style="background:#f1f5f9;color:#475569">🥈 #2 Today</div>
+    <div class="sc-instr-name">BSE Sensex Options</div>
+    <div class="sc-symbol-small">BSXOPT · BFO · CE · @scalp_lord_73</div>
+    <div class="sc-return" style="color:var(--green)">+31.35%</div>
+    <div class="sc-meta-row">
+      <span class="sc-type-tag tag-ce">CE</span>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">₹262.27 → ₹344.49</span>
+    </div>
+    <div class="sc-narrative">"Sensex CE at ₹262.27 → ₹344.49 (+31%). Macro trigger: Crude oil fell below $100 on US-Iran de-escalation hopes, sending Sensex and financial stocks sharply higher — CE at 75,500 captured the morning surge."</div>
+  </div>
+
+  <!-- #3 @scalp_lord_73 BSXOPT PE +27.81% -->
+  <div class="smart-card sc-c3">
+    <div class="sc-badge" style="background:#fff7ed;color:#c2410c">🥉 #3 Today</div>
+    <div class="sc-instr-name">BSE Sensex Options</div>
+    <div class="sc-symbol-small">BSXOPT · BFO · PE · @scalp_lord_73</div>
+    <div class="sc-return" style="color:var(--green)">+27.81%</div>
+    <div class="sc-meta-row">
+      <span class="sc-type-tag tag-pe">PE</span>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">₹262.47 → ₹335.46</span>
+    </div>
+    <div class="sc-narrative">"Sensex PE at ₹262.47 → ₹335.46 (+28%). Macro trigger: Despite the index closing up, intraday geopolitical uncertainty caused sharp dips — this PE leg was held through the afternoon reversal."</div>
+  </div>
+
+  <!-- #4 @scalp_lord_73 BSXOPT PE +25.69% -->
+  <div class="smart-card sc-c4">
+    <div class="sc-badge" style="background:var(--accent-light);color:var(--accent)">#4 Today</div>
+    <div class="sc-instr-name">BSE Sensex Options</div>
+    <div class="sc-symbol-small">BSXOPT · BFO · PE · @scalp_lord_73</div>
+    <div class="sc-return" style="color:var(--green)">+25.69%</div>
+    <div class="sc-meta-row">
+      <span class="sc-type-tag tag-pe">PE</span>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">₹150.98 → ₹189.76</span>
+    </div>
+    <div class="sc-narrative">"Sensex PE at ₹150.98 → ₹189.76 (+26%). Macro trigger: Mixed signals on the US-Iran ceasefire late session — index faded from highs, pushing 75,200 PE premium up 26% into close."</div>
+  </div>
+
+  <!-- #5 @algo_sniper_29 BSXOPT PE +22.96% -->
+  <div class="smart-card sc-c5">
+    <div class="sc-badge" style="background:var(--green-light);color:var(--green)">#5 Today</div>
+    <div class="sc-instr-name">BSE Sensex Options</div>
+    <div class="sc-symbol-small">BSXOPT · BFO · PE · @algo_sniper_29</div>
+    <div class="sc-return" style="color:var(--green)">+22.96%</div>
+    <div class="sc-meta-row">
+      <span class="sc-type-tag tag-pe">PE</span>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">₹82.85 → ₹101.87</span>
+    </div>
+    <div class="sc-narrative">"Sensex PE at ₹82.85 → ₹101.87 (+23%). Macro trigger: Oil supply uncertainty from the Strait of Hormuz spooked markets mid-session despite the broader recovery — deep OTM PE at 75,500 spiked on the dip."</div>
+  </div>
+
+  <!-- #6 @scalp_lord_73 BSXOPT PE +21.39% -->
+  <div class="smart-card sc-c1">
+    <div class="sc-badge" style="background:var(--purple-light);color:var(--purple)">#6 Today</div>
+    <div class="sc-instr-name">BSE Sensex Options</div>
+    <div class="sc-symbol-small">BSXOPT · BFO · PE · @scalp_lord_73</div>
+    <div class="sc-return" style="color:var(--green)">+21.39%</div>
+    <div class="sc-meta-row">
+      <span class="sc-type-tag tag-pe">PE</span>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">₹175.21 → ₹212.68</span>
+    </div>
+    <div class="sc-narrative">"Sensex PE at ₹175.21 → ₹212.68 (+21%). Macro trigger: Sensex gave back gains twice before recovering — this put position was sized for the intraday volatility spike tied to Iran crude output news."</div>
+  </div>
+
+  <!-- #7 @delta_monk_95 BSXOPT PE +19.46% -->
+  <div class="smart-card sc-c2">
+    <div class="sc-badge" style="background:var(--accent-light);color:var(--accent)">#7 Today</div>
+    <div class="sc-instr-name">BSE Sensex Options</div>
+    <div class="sc-symbol-small">BSXOPT · BFO · PE · @delta_monk_95</div>
+    <div class="sc-return" style="color:var(--green)">+19.46%</div>
+    <div class="sc-meta-row">
+      <span class="sc-type-tag tag-pe">PE</span>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">₹138.63 → ₹165.61</span>
+    </div>
+    <div class="sc-narrative">"Sensex PE at ₹138.63 → ₹165.61 (+19%). Macro trigger: Broad-based rally masked real volatility — Bajaj Finance surged 4% while TCS fell 0.9%, causing expiry-day index swings that inflated PE premium."</div>
+  </div>
+
+  <!-- #8 @delta_monk_95 BSXOPT CE +18.38% -->
+  <div class="smart-card sc-c3">
+    <div class="sc-badge" style="background:var(--green-light);color:var(--green)">#8 Today</div>
+    <div class="sc-instr-name">BSE Sensex Options</div>
+    <div class="sc-symbol-small">BSXOPT · BFO · CE · @delta_monk_95</div>
+    <div class="sc-return" style="color:var(--green)">+18.38%</div>
+    <div class="sc-meta-row">
+      <span class="sc-type-tag tag-ce">CE</span>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">₹93.44 → ₹110.61</span>
+    </div>
+    <div class="sc-narrative">"Sensex CE at ₹93.44 → ₹110.61 (+18%). Macro trigger: Sensex extended its second-day rally on global risk-on sentiment after Trump paused Iran strikes — 75,500 CE at support-turned-resistance played out perfectly."</div>
+  </div>
+
+  <!-- #9 @trend_rider_94 BSXOPT PE +18.01% -->
+  <div class="smart-card sc-c4">
+    <div class="sc-badge" style="background:#fff7ed;color:var(--orange)">#9 Today</div>
+    <div class="sc-instr-name">BSE Sensex Options</div>
+    <div class="sc-symbol-small">BSXOPT · BFO · PE · @trend_rider_94</div>
+    <div class="sc-return" style="color:var(--green)">+18.01%</div>
+    <div class="sc-meta-row">
+      <span class="sc-type-tag tag-pe">PE</span>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">₹27.04 → ₹31.91</span>
+    </div>
+    <div class="sc-narrative">"Sensex PE at ₹27.04 → ₹31.91 (+18%). Macro trigger: RBI composite PMI fell to 56.5 from 58.9, a 4-month low — weak domestic data weighed on Sensex midday, boosting short-dated PE value ahead of expiry."</div>
+  </div>
+
+  <!-- #10 @spread_king_59 BSXOPT CE +14.73% -->
+  <div class="smart-card sc-c5">
+    <div class="sc-badge" style="background:var(--gold-light);color:var(--gold)">#10 Today</div>
+    <div class="sc-instr-name">BSE Sensex Options</div>
+    <div class="sc-symbol-small">BSXOPT · BFO · CE · @spread_king_59</div>
+    <div class="sc-return" style="color:var(--green)">+14.73%</div>
+    <div class="sc-meta-row">
+      <span class="sc-type-tag tag-ce">CE</span>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">₹13.37 → ₹15.34</span>
+    </div>
+    <div class="sc-narrative">"Sensex CE at ₹13.37 → ₹15.34 (+15%). Macro trigger: HDFC Bank rose 2.7% and L&T gained 3.8% on infrastructure spending hopes — heavyweight financials pulled the Sensex CE deep into the money by afternoon."</div>
+  </div>
+
+</div>
+
+<!-- SUGGESTED TRADERS -->
+<div class="section-head" style="padding-top:18px;">
+  <div class="section-title">👥 Suggested Traders</div>
+  <div style="font-size:11px;color:var(--accent);cursor:pointer;font-weight:600;">See all</div>
+</div>
+<div class="suggested-wrap">
+
+  <!-- @scalp_lord_73 — 6 trades today, best +31.35% -->
+  <div class="sug-card">
+    <div class="sug-avatar av-2">SL</div>
+    <div class="sug-info">
+      <div class="sug-name">@scalp_lord_73</div>
+      <div class="sug-meta">Options · BFO</div>
+      <div class="sug-stat">Best today <span style="color:var(--green);font-weight:700">+31.35%</span></div>
+    </div>
+    <div class="sug-right">
+      <div class="sug-trades">6 trades</div>
+      <button class="sug-follow-btn" onclick="sugFollow(this)">+ Follow</button>
+    </div>
+  </div>
+
+  <!-- @algo_sniper_29 — 1 trade today, +22.96% -->
+  <div class="sug-card">
+    <div class="sug-avatar av-3">AS</div>
+    <div class="sug-info">
+      <div class="sug-name">@algo_sniper_29</div>
+      <div class="sug-meta">Options · BFO</div>
+      <div class="sug-stat">Best today <span style="color:var(--green);font-weight:700">+22.96%</span></div>
+    </div>
+    <div class="sug-right">
+      <div class="sug-trades">1 trade</div>
+      <button class="sug-follow-btn" onclick="sugFollow(this)">+ Follow</button>
+    </div>
+  </div>
+
+  <!-- @delta_monk_95 — 2 trades, best +19.46% -->
+  <div class="sug-card">
+    <div class="sug-avatar av-4">DM</div>
+    <div class="sug-info">
+      <div class="sug-name">@delta_monk_95</div>
+      <div class="sug-meta">Options · BFO</div>
+      <div class="sug-stat">Best today <span style="color:var(--green);font-weight:700">+19.46%</span></div>
+    </div>
+    <div class="sug-right">
+      <div class="sug-trades">2 trades</div>
+      <button class="sug-follow-btn" onclick="sugFollow(this)">+ Follow</button>
+    </div>
+  </div>
+
+  <!-- @gamma_trap_45 — 2 trades, best +14.31% -->
+  <div class="sug-card">
+    <div class="sug-avatar av-5">GT</div>
+    <div class="sug-info">
+      <div class="sug-name">@gamma_trap_45</div>
+      <div class="sug-meta">Options · BFO</div>
+      <div class="sug-stat">Best today <span style="color:var(--green);font-weight:700">+14.31%</span></div>
+    </div>
+    <div class="sug-right">
+      <div class="sug-trades">2 trades</div>
+      <button class="sug-follow-btn" onclick="sugFollow(this)">+ Follow</button>
+    </div>
+  </div>
+
+  <!-- @vol_king_92 — 1 trade, +12.95% -->
+  <div class="sug-card">
+    <div class="sug-avatar av-6">VK</div>
+    <div class="sug-info">
+      <div class="sug-name">@vol_king_92</div>
+      <div class="sug-meta">Options · NFO</div>
+      <div class="sug-stat">Best today <span style="color:var(--green);font-weight:700">+12.95%</span></div>
+    </div>
+    <div class="sug-right">
+      <div class="sug-trades">1 trade</div>
+      <button class="sug-follow-btn" onclick="sugFollow(this)">+ Follow</button>
+    </div>
+  </div>
+
+  <!-- @zetatrade_18 — 4 trades, best +12.46% -->
+  <div class="sug-card">
+    <div class="sug-avatar av-7">ZT</div>
+    <div class="sug-info">
+      <div class="sug-name">@zetatrade_18</div>
+      <div class="sug-meta">Options · NFO</div>
+      <div class="sug-stat">Best today <span style="color:var(--green);font-weight:700">+12.46%</span></div>
+    </div>
+    <div class="sug-right">
+      <div class="sug-trades">4 trades</div>
+      <button class="sug-follow-btn" onclick="sugFollow(this)">+ Follow</button>
+    </div>
+  </div>
+
+  <!-- @silent_bull_71 — 1 trade, +9.73% -->
+  <div class="sug-card">
+    <div class="sug-avatar av-8">SB</div>
+    <div class="sug-info">
+      <div class="sug-name">@silent_bull_71</div>
+      <div class="sug-meta">Options · BFO</div>
+      <div class="sug-stat">Best today <span style="color:var(--green);font-weight:700">+9.73%</span></div>
+    </div>
+    <div class="sug-right">
+      <div class="sug-trades">1 trade</div>
+      <button class="sug-follow-btn" onclick="sugFollow(this)">+ Follow</button>
+    </div>
+  </div>
+
+  <!-- @trend_rider_94 — 1 trade, +18.01% -->
+  <div class="sug-card">
+    <div class="sug-avatar av-4">TR</div>
+    <div class="sug-info">
+      <div class="sug-name">@trend_rider_94</div>
+      <div class="sug-meta">Options · BFO</div>
+      <div class="sug-stat">Best today <span style="color:var(--green);font-weight:700">+18.01%</span></div>
+    </div>
+    <div class="sug-right">
+      <div class="sug-trades">1 trade</div>
+      <button class="sug-follow-btn" onclick="sugFollow(this)">+ Follow</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- FEED TOGGLE: Top 20 vs Following -->
+<div class="feed-toggle">
+  <div class="toggle-btn active" onclick="switchFeed(this,'top20-area')">🏆 Top 20</div>
+  <div class="toggle-btn" onclick="switchFeed(this,'following-area')">👥 Following</div>
+</div>
+
+<!-- LEADERBOARD SUB-TABS (only shown in Top 20 view) -->
+<div class="lb-tabs" id="lbTabs">
+  <div class="lb-tab active" onclick="switchLB(this,'pct-pane')">
+    📈 By Return %
+    <span>Biggest % gainers</span>
+  </div>
+  <div class="lb-tab" onclick="switchLB(this,'pnl-pane')">
+    ₹ By Absolute P&L
+    <span>Highest ₹ profits</span>
+  </div>
+</div>
+
+<!-- DATE STRIP -->
+<div class="date-strip">
+  <div class="date-label" id="lbTitle">Top 20 by Return %</div>
+  <div class="trade-count">26 Mar 2026 · 20 trades</div>
+</div>
+
+<!-- FEED WRAPPER -->
+<div class="feed">
+
+  <!-- ══ TOP 20 AREA ══ -->
+  <div id="top20-area">
+
+    <!-- ── BY RETURN % ── -->
+    <div class="feed-pane active" id="pct-pane">
+
+      <!-- #1 -->
+      <div class="trade-card">
+        <div class="tc-head">
+          <div class="tc-avatar av-1">SK</div>
+          <div class="tc-meta">
+            <div class="tc-name-row">
+              <span class="tc-username">@spread_king_59</span>
+              <span class="tc-rank-badge badge-gold">🥇 #1 Return</span>
+            </div>
+            <div class="tc-sub">BFO · Options · NRML</div>
+          </div>
+          <div class="tc-return-big">+123.27%</div>
+        </div>
+        <div class="tc-narrative">"US-Iran ceasefire talks injected massive intraday volatility into Sensex — bought PE at ₹14.74 as crude eased and index spiked, then held as momentum reversed into the 75,200 strike. Exited at ₹32.91 for 123% gain."</div>
+        <div class="tc-box">
+          <div class="tc-instr-row">
+            <div>
+              <div class="tc-instr-full">BSE Sensex Options</div>
+              <div class="tc-instr-meta">
+                <span class="tc-symbol-tag">BSXOPT</span>
+                <span class="tc-instr-type tag-pe">PE · 75200</span>
+              </div>
+            </div>
+            <div class="tc-pnl-block"><div class="tc-pnl-label">Realized P&L</div><div class="tc-pnl-val">+₹1,45,314</div></div>
+          </div>
+          <div class="tc-stats-row">
+            <div><div class="tc-stat-lbl">Entry</div><div class="tc-stat-val">₹14.74</div></div>
+            <div><div class="tc-stat-lbl">Exit</div><div class="tc-stat-val">₹32.91</div></div>
+            <div><div class="tc-stat-lbl">Capital</div><div class="tc-stat-val">₹10,800</div></div>
+          </div>
+        </div>
+        <div class="tc-foot">
+          <button class="follow-btn following">✓ Following</button>
+          <div class="tc-foot-meta">
+            <span class="eff-chip" title="Efficiency = Return% ÷ Max Drawdown%">Eff 4.0× ℹ️</span>
+            <span class="tc-foot-stat">❤️ 41</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- #2 -->
+      <div class="trade-card">
+        <div class="tc-head">
+          <div class="tc-avatar av-2">SL</div>
+          <div class="tc-meta">
+            <div class="tc-name-row">
+              <span class="tc-username">@scalp_lord_73</span>
+              <span class="tc-rank-badge badge-silver">🥈 #2 Return</span>
+            </div>
+            <div class="tc-sub">BFO · Options · NRML</div>
+          </div>
+          <div class="tc-return-big">+31.35%</div>
+        </div>
+        <div class="tc-narrative">"Trump's pause on Iran energy strikes sent Sensex up 1,200 pts — entered CE at ₹262.27 on the morning gap-up, rode financials-led rally (Bajaj Finance +3.8%, HDFC Bank +2.7%) to ₹344.49. Booked 31% in one session."</div>
+        <div class="tc-box">
+          <div class="tc-instr-row">
+            <div>
+              <div class="tc-instr-full">BSE Sensex Options</div>
+              <div class="tc-instr-meta">
+                <span class="tc-symbol-tag">BSXOPT</span>
+                <span class="tc-instr-type tag-ce">CE · 75500</span>
+              </div>
+            </div>
+            <div class="tc-pnl-block"><div class="tc-pnl-label">Realized P&L</div><div class="tc-pnl-val">+₹1,56,210</div></div>
+          </div>
+          <div class="tc-stats-row">
+            <div><div class="tc-stat-lbl">Entry</div><div class="tc-stat-val">₹262.27</div></div>
+            <div><div class="tc-stat-lbl">Exit</div><div class="tc-stat-val">₹344.49</div></div>
+            <div><div class="tc-stat-lbl">Capital</div><div class="tc-stat-val">₹4,98,312</div></div>
+          </div>
+        </div>
+        <div class="tc-foot">
+          <button class="follow-btn" onclick="toggleFollow(this)">+ Follow</button>
+          <div class="tc-foot-meta">
+            <span class="eff-chip" title="Efficiency = Return% ÷ Max Drawdown%">Eff 4.0× ℹ️</span>
+            <span class="tc-foot-stat">❤️ 38</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- #3 -->
+      <div class="trade-card">
+        <div class="tc-head">
+          <div class="tc-avatar av-2">SL</div>
+          <div class="tc-meta">
+            <div class="tc-name-row">
+              <span class="tc-username">@scalp_lord_73</span>
+              <span class="tc-rank-badge badge-bronze">🥉 #3 Return</span>
+            </div>
+            <div class="tc-sub">BFO · Options · NRML</div>
+          </div>
+          <div class="tc-return-big">+27.81%</div>
+        </div>
+        <div class="tc-narrative">"Despite the headline rally, crude oil uncertainty and PMI weakness (HSBC India PMI at 4-month low of 56.5) caused sharp intraday dips. PE at ₹262.47 captured the afternoon reversal, exiting at ₹335.46 for 27.8%."</div>
+        <div class="tc-box">
+          <div class="tc-instr-row">
+            <div>
+              <div class="tc-instr-full">BSE Sensex Options</div>
+              <div class="tc-instr-meta">
+                <span class="tc-symbol-tag">BSXOPT</span>
+                <span class="tc-instr-type tag-pe">PE · 75500</span>
+              </div>
+            </div>
+            <div class="tc-pnl-block"><div class="tc-pnl-label">Realized P&L</div><div class="tc-pnl-val">+₹1,16,789</div></div>
+          </div>
+          <div class="tc-stats-row">
+            <div><div class="tc-stat-lbl">Entry</div><div class="tc-stat-val">₹262.47</div></div>
+            <div><div class="tc-stat-lbl">Exit</div><div class="tc-stat-val">₹335.46</div></div>
+            <div><div class="tc-stat-lbl">Capital</div><div class="tc-stat-val">₹4,19,952</div></div>
+          </div>
+        </div>
+        <div class="tc-foot">
+          <button class="follow-btn" onclick="toggleFollow(this)">+ Follow</button>
+          <div class="tc-foot-meta">
+            <span class="eff-chip" title="Efficiency = Return% ÷ Max Drawdown%">Eff 4.0× ℹ️</span>
+            <span class="tc-foot-stat">❤️ 29</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- #4 -->
+      <div class="trade-card">
+        <div class="tc-head">
+          <div class="tc-avatar av-2">SL</div>
+          <div class="tc-meta">
+            <div class="tc-name-row">
+              <span class="tc-username">@scalp_lord_73</span>
+              <span class="tc-rank-badge badge-rank">#4</span>
+            </div>
+            <div class="tc-sub">BFO · Options · NRML</div>
+          </div>
+          <div class="tc-return-big">+25.69%</div>
+        </div>
+        <div class="tc-narrative">"Mixed geopolitical commentary on the US-Iran situation created late-session uncertainty — Sensex faded from its 75,500 high. PE at 75,200 strike benefited from the close-of-day slide, exiting at ₹189.76 (+26%)."</div>
+        <div class="tc-box">
+          <div class="tc-instr-row">
+            <div>
+              <div class="tc-instr-full">BSE Sensex Options</div>
+              <div class="tc-instr-meta">
+                <span class="tc-symbol-tag">BSXOPT</span>
+                <span class="tc-instr-type tag-pe">PE · 75200</span>
+              </div>
+            </div>
+            <div class="tc-pnl-block"><div class="tc-pnl-label">Realized P&L</div><div class="tc-pnl-val">+₹2,32,717</div></div>
+          </div>
+          <div class="tc-stats-row">
+            <div><div class="tc-stat-lbl">Entry</div><div class="tc-stat-val">₹150.98</div></div>
+            <div><div class="tc-stat-lbl">Exit</div><div class="tc-stat-val">₹189.76</div></div>
+            <div><div class="tc-stat-lbl">Capital</div><div class="tc-stat-val">₹9,05,880</div></div>
+          </div>
+        </div>
+        <div class="tc-foot">
+          <button class="follow-btn" onclick="toggleFollow(this)">+ Follow</button>
+          <div class="tc-foot-meta">
+            <span class="eff-chip" title="Efficiency = Return% ÷ Max Drawdown%">Eff 4.0× ℹ️</span>
+            <span class="tc-foot-stat">❤️ 22</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- #5 -->
+      <div class="trade-card">
+        <div class="tc-head">
+          <div class="tc-avatar av-3">AS</div>
+          <div class="tc-meta">
+            <div class="tc-name-row">
+              <span class="tc-username">@algo_sniper_29</span>
+              <span class="tc-rank-badge badge-rank">#5</span>
+            </div>
+            <div class="tc-sub">BFO · Options · NRML</div>
+          </div>
+          <div class="tc-return-big">+22.96%</div>
+        </div>
+        <div class="tc-narrative">"Mid-session Strait of Hormuz supply concerns resurfaced briefly, spiking crude. Algo triggered a PE entry at ₹82.85 on the intraday volatility spike — exited at ₹101.87 as index recovered, locking in 23%."</div>
+        <div class="tc-box">
+          <div class="tc-instr-row">
+            <div>
+              <div class="tc-instr-full">BSE Sensex Options</div>
+              <div class="tc-instr-meta">
+                <span class="tc-symbol-tag">BSXOPT</span>
+                <span class="tc-instr-type tag-pe">PE · 75500</span>
+              </div>
+            </div>
+            <div class="tc-pnl-block"><div class="tc-pnl-label">Realized P&L</div><div class="tc-pnl-val">+₹2,663</div></div>
+          </div>
+          <div class="tc-stats-row">
+            <div><div class="tc-stat-lbl">Entry</div><div class="tc-stat-val">₹82.85</div></div>
+            <div><div class="tc-stat-lbl">Exit</div><div class="tc-stat-val">₹101.87</div></div>
+            <div><div class="tc-stat-lbl">Capital</div><div class="tc-stat-val">₹11,599</div></div>
+          </div>
+        </div>
+        <div class="tc-foot">
+          <button class="follow-btn" onclick="toggleFollow(this)">+ Follow</button>
+          <div class="tc-foot-meta">
+            <span class="eff-chip" title="Efficiency = Return% ÷ Max Drawdown%">Eff 4.0× ℹ️</span>
+            <span class="tc-foot-stat">❤️ 17</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- #7 -->
+      <div class="trade-card">
+        <div class="tc-head">
+          <div class="tc-avatar av-4">DM</div>
+          <div class="tc-meta">
+            <div class="tc-name-row">
+              <span class="tc-username">@delta_monk_95</span>
+              <span class="tc-rank-badge badge-rank">#7</span>
+            </div>
+            <div class="tc-sub">BFO · Options · NRML</div>
+          </div>
+          <div class="tc-return-big">+19.46%</div>
+        </div>
+        <div class="tc-narrative">"Index breadth was strong (26 advances, 4 declines on Sensex) but TCS fell 0.86% and Tech Mahindra lost 1.66% — IT drag kept expiry-day options volatile. PE at ₹138.63 ran to ₹165.61 as the index whipsawed into close."</div>
+        <div class="tc-box">
+          <div class="tc-instr-row">
+            <div>
+              <div class="tc-instr-full">BSE Sensex Options</div>
+              <div class="tc-instr-meta">
+                <span class="tc-symbol-tag">BSXOPT</span>
+                <span class="tc-instr-type tag-pe">PE · 75200</span>
+              </div>
+            </div>
+            <div class="tc-pnl-block"><div class="tc-pnl-label">Realized P&L</div><div class="tc-pnl-val">+₹8,52,928</div></div>
+          </div>
+          <div class="tc-stats-row">
+            <div><div class="tc-stat-lbl">Entry</div><div class="tc-stat-val">₹138.63</div></div>
+            <div><div class="tc-stat-lbl">Exit</div><div class="tc-stat-val">₹165.61</div></div>
+            <div><div class="tc-stat-lbl">Capital</div><div class="tc-stat-val">₹43,83,534</div></div>
+          </div>
+        </div>
+        <div class="tc-foot">
+          <button class="follow-btn" onclick="toggleFollow(this)">+ Follow</button>
+          <div class="tc-foot-meta">
+            <span class="eff-chip" title="Efficiency = Return% ÷ Max Drawdown%">Eff 4.0× ℹ️</span>
+            <span class="tc-foot-stat">❤️ 31</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center;padding:12px 0 4px;font-size:12px;color:var(--muted);">
+        Showing 6 of 20 · <span style="color:var(--accent);cursor:pointer;font-weight:600;">Load more ↓</span>
+      </div>
+    </div><!-- end pct-pane -->
+
+    <!-- ── BY ABSOLUTE P&L ── -->
+    <div class="feed-pane" id="pnl-pane">
+
+      <!-- P&L #1: DS623 → @spread_king_59 ₹1,48,296 -->
+      <div class="trade-card">
+        <div class="tc-head">
+          <div class="tc-avatar av-1">SK</div>
+          <div class="tc-meta">
+            <div class="tc-name-row">
+              <span class="tc-username">@spread_king_59</span>
+              <span class="tc-rank-badge badge-gold">🥇 #1 P&L</span>
+            </div>
+            <div class="tc-sub">BFO · Options · NRML · 3 trades</div>
+          </div>
+          <div class="tc-return-big">₹1,48,296</div>
+        </div>
+        <div class="tc-narrative">"Best day of the month — 3 Sensex trades all capitalised on US-Iran de-escalation volatility. Standout: 75,200 PE at ₹14.74 → ₹32.91 (+123%) as crude fell below $100 and options pricing exploded on the macro news."</div>
+        <div class="tc-box">
+          <div class="tc-instr-row">
+            <div>
+              <div class="tc-instr-full">BSE Sensex Options</div>
+              <div class="tc-instr-meta">
+                <span class="tc-symbol-tag">BSXOPT</span>
+                <span class="tc-instr-type tag-pe" style="background:#f5f3ff;color:var(--purple)">3 contracts</span>
+              </div>
+            </div>
+            <div class="tc-pnl-block"><div class="tc-pnl-label">Best Return</div><div class="tc-pnl-val" style="color:var(--green)">+123.27%</div></div>
+          </div>
+          <div class="tc-stats-row">
+            <div><div class="tc-stat-lbl">Total P&L</div><div class="tc-stat-val" style="color:var(--green)">+₹1,48,296</div></div>
+            <div><div class="tc-stat-lbl">Win Rate</div><div class="tc-stat-val">2/3 trades</div></div>
+            <div><div class="tc-stat-lbl">Capital</div><div class="tc-stat-val">~₹33K</div></div>
+          </div>
+        </div>
+        <div class="tc-foot">
+          <button class="follow-btn following">✓ Following</button>
+          <div class="tc-foot-meta">
+            <span class="eff-chip" title="Efficiency = Return% ÷ Max Drawdown%">Eff 4.0× ℹ️</span>
+            <span class="tc-foot-stat">❤️ 41</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- P&L #2: DR1042 → @scalp_lord_73 ₹64,998 -->
+      <div class="trade-card">
+        <div class="tc-head">
+          <div class="tc-avatar av-2">SL</div>
+          <div class="tc-meta">
+            <div class="tc-name-row">
+              <span class="tc-username">@scalp_lord_73</span>
+              <span class="tc-rank-badge badge-silver">🥈 #2 P&L</span>
+            </div>
+            <div class="tc-sub">BFO · Options · NRML · 13 trades</div>
+          </div>
+          <div class="tc-return-big">₹64,998</div>
+        </div>
+        <div class="tc-narrative">"Highest trade count: 13 Sensex option trades across CE and PE legs. Strategy: leveraged the two-way 1,200-pt Sensex swing driven by US-Iran ceasefire optimism — bought the morning CE breakout, then flipped to PE on intraday fades."</div>
+        <div class="tc-box">
+          <div class="tc-instr-row">
+            <div>
+              <div class="tc-instr-full">BSE Sensex Options</div>
+              <div class="tc-instr-meta">
+                <span class="tc-symbol-tag">BSXOPT</span>
+                <span class="tc-instr-type tag-ce" style="background:#f5f3ff;color:var(--purple)">13 contracts</span>
+              </div>
+            </div>
+            <div class="tc-pnl-block"><div class="tc-pnl-label">Best Return</div><div class="tc-pnl-val" style="color:var(--green)">+31.35%</div></div>
+          </div>
+          <div class="tc-stats-row">
+            <div><div class="tc-stat-lbl">Total P&L</div><div class="tc-stat-val" style="color:var(--green)">+₹64,998</div></div>
+            <div><div class="tc-stat-lbl">Win Rate</div><div class="tc-stat-val">9/13 trades</div></div>
+            <div><div class="tc-stat-lbl">Capital</div><div class="tc-stat-val">~₹38L</div></div>
+          </div>
+        </div>
+        <div class="tc-foot">
+          <button class="follow-btn" onclick="toggleFollow(this)">+ Follow</button>
+          <div class="tc-foot-meta">
+            <span class="eff-chip" title="Efficiency = Return% ÷ Max Drawdown%">Eff 4.0× ℹ️</span>
+            <span class="tc-foot-stat">❤️ 38</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- P&L #3: SJ258 → @zetatrade_18 ₹56,222 -->
+      <div class="trade-card">
+        <div class="tc-head">
+          <div class="tc-avatar av-6">ZT</div>
+          <div class="tc-meta">
+            <div class="tc-name-row">
+              <span class="tc-username">@zetatrade_18</span>
+              <span class="tc-rank-badge badge-bronze">🥉 #3 P&L</span>
+            </div>
+            <div class="tc-sub">NFO · Options · MIS · 4 trades</div>
+          </div>
+          <div class="tc-return-big">₹56,222</div>
+        </div>
+        <div class="tc-narrative">"4-for-4 on Nifty 50 CE trades — macro tailwind of easing oil prices (below $100) and global risk-on sentiment drove Nifty up 394 pts (+1.72%). Highest single return: 12.5% on the 23,000 CE. All trades closed before reversal."</div>
+        <div class="tc-box">
+          <div class="tc-instr-row">
+            <div>
+              <div class="tc-instr-full">Nifty 50 Options</div>
+              <div class="tc-instr-meta">
+                <span class="tc-symbol-tag">NIFTY</span>
+                <span class="tc-instr-type tag-ce" style="background:#f5f3ff;color:var(--purple)">4 contracts</span>
+              </div>
+            </div>
+            <div class="tc-pnl-block"><div class="tc-pnl-label">Best Return</div><div class="tc-pnl-val" style="color:var(--green)">+12.46%</div></div>
+          </div>
+          <div class="tc-stats-row">
+            <div><div class="tc-stat-lbl">Total P&L</div><div class="tc-stat-val" style="color:var(--green)">+₹56,222</div></div>
+            <div><div class="tc-stat-lbl">Win Rate</div><div class="tc-stat-val">4/4 trades</div></div>
+            <div><div class="tc-stat-lbl">Capital</div><div class="tc-stat-val">~₹6L</div></div>
+          </div>
+        </div>
+        <div class="tc-foot">
+          <button class="follow-btn following">✓ Following</button>
+          <div class="tc-foot-meta">
+            <span class="eff-chip" title="Efficiency = Return% ÷ Max Drawdown%">Eff 4.0× ℹ️</span>
+            <span class="tc-foot-stat">❤️ 27</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- P&L #4: KG201 → @trend_rider_38 ₹13,476 -->
+      <div class="trade-card">
+        <div class="tc-head">
+          <div class="tc-avatar av-7">TR</div>
+          <div class="tc-meta">
+            <div class="tc-name-row">
+              <span class="tc-username">@trend_rider_38</span>
+              <span class="tc-rank-badge badge-rank">#4 P&L</span>
+            </div>
+            <div class="tc-sub">NFO · Options · NRML · 7 trades</div>
+          </div>
+          <div class="tc-return-big">₹13,476</div>
+        </div>
+        <div class="tc-narrative">"Diversified across Nifty 50 and Tata Steel options. Tata Steel surged 3.01% as crude eased (steel is energy-cost sensitive) — TATASTEEL PE plays captured the intraday dip before the close. Nifty CE trades rode the broad-based recovery."</div>
+        <div class="tc-box">
+          <div class="tc-instr-row">
+            <div>
+              <div class="tc-instr-full">Nifty 50 + Tata Steel Options</div>
+              <div class="tc-instr-meta">
+                <span class="tc-symbol-tag">NIFTY</span>
+                <span class="tc-symbol-tag">TATASTEEL</span>
+                <span class="tc-instr-type tag-ce" style="background:#f5f3ff;color:var(--purple)">7 contracts</span>
+              </div>
+            </div>
+            <div class="tc-pnl-block"><div class="tc-pnl-label">Best Return</div><div class="tc-pnl-val" style="color:var(--green)">+7.41%</div></div>
+          </div>
+          <div class="tc-stats-row">
+            <div><div class="tc-stat-lbl">Total P&L</div><div class="tc-stat-val" style="color:var(--green)">+₹13,476</div></div>
+            <div><div class="tc-stat-lbl">Win Rate</div><div class="tc-stat-val">6/7 trades</div></div>
+            <div><div class="tc-stat-lbl">Capital</div><div class="tc-stat-val">~₹1.8L</div></div>
+          </div>
+        </div>
+        <div class="tc-foot">
+          <button class="follow-btn" onclick="toggleFollow(this)">+ Follow</button>
+          <div class="tc-foot-meta">
+            <span class="eff-chip" title="Efficiency = Return% ÷ Max Drawdown%">Eff 4.0× ℹ️</span>
+            <span class="tc-foot-stat">❤️ 19</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- P&L #5: SA321 → @vol_king_92 ₹9,301 -->
+      <div class="trade-card">
+        <div class="tc-head">
+          <div class="tc-avatar av-5">VK</div>
+          <div class="tc-meta">
+            <div class="tc-name-row">
+              <span class="tc-username">@vol_king_92</span>
+              <span class="tc-rank-badge badge-rank">#5 P&L</span>
+            </div>
+            <div class="tc-sub">NSE · Equity · CO · 15 trades</div>
+          </div>
+          <div class="tc-return-big">₹9,301</div>
+        </div>
+        <div class="tc-narrative">"15 Nifty 50 option trades — disciplined scalping on a high-volume session. Nifty's 400-pt range (23,063 low → 23,465 high) driven by Iran-crude macro news provided repeated CE entry opportunities throughout the day."</div>
+        <div class="tc-box">
+          <div class="tc-instr-row">
+            <div>
+              <div class="tc-instr-full">Nifty 50 Options</div>
+              <div class="tc-instr-meta">
+                <span class="tc-symbol-tag">NIFTY</span>
+                <span class="tc-instr-type tag-ce" style="background:#f5f3ff;color:var(--purple)">15 trades</span>
+              </div>
+            </div>
+            <div class="tc-pnl-block"><div class="tc-pnl-label">Best Return</div><div class="tc-pnl-val" style="color:var(--green)">+12.95%</div></div>
+          </div>
+          <div class="tc-stats-row">
+            <div><div class="tc-stat-lbl">Total P&L</div><div class="tc-stat-val" style="color:var(--green)">+₹9,301</div></div>
+            <div><div class="tc-stat-lbl">Win Rate</div><div class="tc-stat-val">11/15 trades</div></div>
+            <div><div class="tc-stat-lbl">Capital</div><div class="tc-stat-val">~₹2.8L</div></div>
+          </div>
+        </div>
+        <div class="tc-foot">
+          <button class="follow-btn" onclick="toggleFollow(this)">+ Follow</button>
+          <div class="tc-foot-meta">
+            <span class="eff-chip" title="Efficiency = Return% ÷ Max Drawdown%">Eff 4.0× ℹ️</span>
+            <span class="tc-foot-stat">❤️ 14</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center;padding:12px 0 4px;font-size:12px;color:var(--muted);">
+        Showing 5 of 20 · <span style="color:var(--accent);cursor:pointer;font-weight:600;">Load more ↓</span>
+      </div>
+    </div><!-- end pnl-pane -->
+
+  </div><!-- end top20-area -->
+
+  <!-- ══ FOLLOWING AREA ══ -->
+  <div id="following-area" style="display:none;">
+    <div style="text-align:center;padding:40px 20px;">
+      <div style="font-size:32px;margin-bottom:10px;">👥</div>
+      <div style="font-family:var(--heading);font-size:15px;font-weight:700;margin-bottom:6px;">Follow traders to see their trades here</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;">Tap <strong>+ Follow</strong> on any trader in the Top 20 to track their future trades in this feed.</div>
+    </div>
+  </div>
+
+</div><!-- end .feed -->
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-item active"><div class="nav-icon">📡</div><div class="nav-label">Moneyfeed</div></div>
+  <div class="nav-item"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+</div>
+
+<script>
+  // Suggested trader follow
+  function sugFollow(btn) {
+    btn.classList.toggle('following');
+    btn.textContent = btn.classList.contains('following') ? '✓ Following' : '+ Follow';
+  }
+
+  // Follow toggle
+  function toggleFollow(btn) {
+    btn.classList.toggle('following');
+    btn.textContent = btn.classList.contains('following') ? '✓ Following' : '+ Follow';
+  }
+
+  // Top nav tabs
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+    });
+  });
+
+  // Feed toggle: Top 20 vs Following
+  function switchFeed(btn, areaId) {
+    document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('top20-area').style.display = areaId === 'top20-area' ? 'block' : 'none';
+    document.getElementById('following-area').style.display = areaId === 'following-area' ? 'block' : 'none';
+    document.getElementById('lbTabs').style.display = areaId === 'top20-area' ? 'flex' : 'none';
+  }
+
+  // Leaderboard sub-tabs: % Return vs Absolute P&L
+  function switchLB(btn, paneId) {
+    document.querySelectorAll('.lb-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('pct-pane').classList.remove('active');
+    document.getElementById('pnl-pane').classList.remove('active');
+    document.getElementById(paneId).classList.add('active');
+    document.getElementById('lbTitle').textContent =
+      paneId === 'pct-pane' ? 'Top 20 by Return %' : 'Top 20 by Absolute P&L';
+  }
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,322 @@
+create next project for below requiments
+
+Browser (Next.js)
+    │
+    ├── /feed          → reads from leaderboard + smart_picks tables (cached, CDN)
+    ├── /profile/:id   → reads from traders + trades tables
+    ├── /admin/*       → protected, reads/writes upload_log, triggers job queue
+    │
+    └── API Routes (Next.js)
+            │
+            ├── POST /api/upload   → saves CSV to Supabase Storage, enqueues Bull job
+            ├── GET  /api/feed     → queries leaderboard table
+            └── POST /api/publish  → admin approves → writes to live leaderboard
+                    │
+                    └── Bull Worker (Railway)
+                            │
+                            ├── Parse XLS/CSV
+                            ├── Validate columns
+                            ├── Anonymise Account IDs
+                            ├── Run ranking engine
+                            └── Write to PostgreSQL
+ignore this
+// leaderboards — one doc per trading day
+{
+  date: "2026-03-25",
+  published: true,
+  published_at: ISODate,
+  top20: [
+    { rank: 1, username: "@spread_king_59", instrument: "BSE Sensex Options",
+      symbol: "BSXOPT", exchange: "BFO", option_type: "PE", strike: 75000,
+      entry: 14.74, exit: 32.91, ret_pct: 123.27, pnl: 145314,
+      capital: 117930, narrative: "...", macro_context: "..." }
+  ],
+  smart_picks: [ ... ]  // top 5 by efficiency ratio
+}
+
+// traders — one doc per anonymised trader
+{
+  username: "@spread_king_59",
+  account_id_hash: "sha256_hash_only",   // NEVER raw account_id
+  followers: 2841,
+  following: 183,
+  win_rate: 67,
+  total_appearances: 3,
+  created_at: ISODate
+}
+
+// follows
+{
+  follower_id: ObjectId,   // app user
+  trader_username: "@spread_king_59",
+  created_at: ISODate
+}
+
+// upload_log
+{
+  filename: "Intraday_25032026.xls",
+  uploaded_by: "rohit@incred.com",
+  uploaded_at: ISODate,
+  row_count: 482310,
+  eligible_rows: 463631,
+  status: "published",  // pending | validated | preview | published | failed
+  error: null
+}
+
+// users — app consumers
+{
+  email: "...",
+  name: "...",
+  role: "consumer",  // or "admin"
+  following: ["@spread_king_59", "@zetatrade_18"]
+}
+mongo db scheme summary ^^
+Build a full-stack web application called "Moneyfeed" — a social trading 
+discovery platform for InCred Money.
+
+## Tech Stack
+Frontend: Next.js 14 (App Router) + Tailwind CSS
+Backend: Node.js + Express (separate service)
+Database: MongoDB Atlas (Mongoose ODM)
+File processing: Multer (upload) + Bull + Redis (async job queue)
+Auth: JWT (admin) + NextAuth.js (consumers)
+# Project Structure
+Create two packages in a monorepo:
+/frontend  → Next.js app
+/backend   → Express API + Bull worker
+claude
+
+**Step 4 — Paste this prompt**
+
+Once Claude Code is running in your terminal, give it this prompt and it will scaffold the entire application:
+
+---
+Build a full-stack web application called "Moneyfeed" — a social trading 
+discovery platform for InCred Money.
+
+## Tech Stack
+Frontend: Next.js 14 (App Router) + Tailwind CSS
+Backend: Node.js + Express (separate service)
+Database: MongoDB Atlas (Mongoose ODM)
+File processing: Multer (upload) + Bull + Redis (async job queue)
+Auth: JWT (admin) + NextAuth.js (consumers)
+
+## Project Structure
+Create two packages in a monorepo:
+/frontend  → Next.js app
+/backend   → Express API + Bull worker
+
+---
+
+## MongoDB Collections (create Mongoose models for all)
+
+### leaderboards
+{
+  date: String (YYYY-MM-DD),
+  published: Boolean,
+  published_at: Date,
+  top20_by_return: [TradeSchema],
+  top20_by_pnl: [TradeSchema],
+  smart_picks: [TradeSchema]
+}
+
+TradeSchema: {
+  rank, username, instrument_name, symbol, exchange, option_type,
+  strike, entry_price, exit_price, ret_pct, pnl, capital_deployed,
+  narrative, macro_context, eff_ratio
+}
+
+### traders
+{
+  username, account_id_hash (sha256, never raw),
+  followers_count, following_count, win_rate,
+  total_appearances, bio, created_at
+}
+
+### follows  
+{ follower_id (ref: users), trader_username, created_at }
+
+### upload_log
+{
+  filename, uploaded_by, uploaded_at, row_count,
+  eligible_rows, status (pending|validated|preview|published|failed),
+  error_message, file_path
+}
+
+### users
+{ email, name, password_hash, role (admin|consumer), following: [String] }
+
+---
+
+## Backend: Express API (port 4000)
+
+### Admin routes (JWT protected, role=admin)
+POST   /api/admin/upload          → accept .xls/.csv, store to /uploads, enqueue Bull job
+GET    /api/admin/upload/:id      → get upload status
+POST   /api/admin/publish/:date   → publish leaderboard for a date
+GET    /api/admin/history         → list all upload_log entries
+GET    /api/admin/preview/:date   → get unpublished leaderboard preview
+
+### Consumer routes (public)
+GET    /api/feed?date=            → get published leaderboard (top20 + smart_picks)
+GET    /api/traders/:username     → get trader profile
+GET    /api/traders/:username/trades → get trader's trade history
+POST   /api/follow                → follow a trader (auth required)
+DELETE /api/follow/:username      → unfollow (auth required)
+GET    /api/me/following          → get followed traders' latest trades
+
+### Auth routes
+POST   /api/auth/login            → returns JWT
+POST   /api/auth/register
+
+---
+
+## Moneyfeed Engine (Bull worker — runs async after upload)
+
+Implement this exact algorithm:
+
+1. PARSE: Read .xls file using xlsx library
+2. VALIDATE: Check required columns exist:
+   AccountId, Exchg-Seg, Product Type, Symbol, BuyQty, BuyAvgPrice,
+   SellQty, SellAvgPrice, NetQty, NetBuyValue, NetSellValue
+3. FILTER: Keep only rows where:
+   - NetQty === 0 (fully closed trades)
+   - NetBuyValue >= 10000 (capital filter)
+   - BuyAvgPrice > 0
+4. CALCULATE P&L:
+   - ret_pct = ((SellAvgPrice - BuyAvgPrice) / BuyAvgPrice) * 100
+   - pnl = NetSellValue - NetBuyValue   ← use this, NOT Realized MarkToMarket column (it has data corruption issues)
+5. ANONYMISE:
+   - Hash AccountId with SHA-256
+   - Map to deterministic username from a list of 25 trader names + 2-digit suffix
+   - Never store raw AccountId in leaderboard or trader collections
+6. INSTRUMENT NAMES: Map symbols to full names:
+   BSXOPT→"BSE Sensex Options", NIFTY→"Nifty 50 Options",
+   TATASTEEL→"Tata Steel Ltd.", OLAELEC→"Ola Electric Mobility Ltd.",
+   and other NSE/BSE symbols to their full company names
+7. GENERATE NARRATIVE: One-line trade description per trade
+8. TOP 20 BY RETURN %: Sort eligible trades by ret_pct descending, take top 20
+9. TOP 20 BY P&L: Aggregate pnl per trader, sort descending, take top 20
+10. SMART PICKS (Efficiency Ratio):
+    - max_dd = ret_pct > 0 ? Math.max(0.1, ret_pct * 0.25) : Math.max(0.1, Math.abs(ret_pct))
+    - eff_ratio = ret_pct / max_dd
+    - Take top 5 by eff_ratio (only positive ret_pct trades)
+11. SAVE to leaderboards collection with status "preview"
+12. UPDATE upload_log status to "validated"
+
+---
+
+## Frontend: Next.js Pages
+
+### /feed (main page — Customer UI)
+Top nav: "🔥 Moneyfeed" logo + date badge
+Two top-level tabs: "Following" | "Top trades"
+"Today's Top 10" horizontal carousel — top 10 by ret_pct
+  - Each card: instrument name, symbol, trader username, return %, entry→exit, one-liner narrative
+Suggested Traders widget — traders not yet followed, showing best return today
+Feed toggle: "🏆 Top 20" | "👥 Following"
+Leaderboard sub-tabs: "📈 By Return %" | "₹ By Absolute P&L"
+Trade cards showing: trader username, instrument full name, symbol tag,
+  exchange, option type + strike, entry, exit, capital, P&L, narrative,
+  macro context line, efficiency chip, follow button, likes
+
+### /profile/[username]
+Hero: avatar, name, verified badge, specialty pills, bio
+Social stats: followers, following, win rate, trades today
+Follow / notify / share buttons
+Today's performance banner (dark blue gradient): P&L, avg return, win rate
+Stat cards: best trade, capital deployed, win/loss bar
+Three tabs: "All Trades" | "Featured" | "Stats"
+Each trade card: instrument name, symbol, type/strike, entry/exit,
+  capital, P&L, narrative + macro context line, featured banner if in top 20
+
+### /admin (protected, role=admin)
+Sidebar nav: Upload & Publish, Preview Feed, Publish History, Algorithm Config
+5-step pipeline status bar: Upload → Validate → Anonymise → Run Engine → Publish
+CSV Upload card: drag-and-drop zone, file validation, progress bar
+Validation Report card: column checks, row counts, filtered rows, processing time
+Engine stats: trades ranked, unique traders, top return
+Preview table: top 20 with rank, username, instrument, return %, efficiency, smart pick flag
+Publish banner with "🚀 Publish Now" button
+Publish history table: date, filename, row count, status badge
+
+### /admin/login
+Simple email + password form, returns JWT stored in httpOnly cookie
+
+---
+
+## Design System
+Use Tailwind CSS. Key design tokens:
+Font: Syne (headings, 800 weight) + DM Sans (body) + DM Mono (numbers/codes)
+Colors: accent #1a6bff, green #00b870, red #ef4444, gold #f59e0b, purple #7c3aed
+Background: #f2f4f8 (page), #ffffff (cards)
+Border: #e3e8f0
+Border radius: cards 12px, buttons 20-10px, avatars 10px
+Bottom nav: 2 tabs only — 📡 Moneyfeed (active on feed) and 👤 Profile
+
+---
+
+## Seed Data
+Use the following real trade data from 25 Mar 2026 for the seed/demo:
+
+Top 20 by Return % (from real engine output):
+1. @spread_king_59 | BSE Sensex Options | PE 75000 | +123.27% | ₹14.74→₹32.91 | P&L ₹1,45,314
+2. @scalp_lord_73  | BSE Sensex Options | CE 75500 | +31.35%  | ₹262.27→₹344.49 | P&L ₹1,56,210
+3. @scalp_lord_73  | BSE Sensex Options | PE 75500 | +27.81%  | ₹262.47→₹335.46 | P&L ₹1,16,789
+4. @scalp_lord_73  | BSE Sensex Options | PE 75200 | +25.69%  | ₹150.98→₹189.76 | P&L ₹2,32,717
+5. @algo_sniper_29 | BSE Sensex Options | PE 75500 | +22.96%  | ₹82.85→₹101.87  | P&L ₹2,663
+6. @scalp_lord_73  | BSE Sensex Options | PE 75200 | +21.39%  | ₹175.21→₹212.68 | P&L ₹2,09,835
+7. @delta_monk_95  | BSE Sensex Options | PE 75200 | +19.46%  | ₹138.63→₹165.61 | P&L ₹8,52,928
+8. @delta_monk_95  | BSE Sensex Options | CE 75500 | +18.38%  | ₹93.44→₹110.61  | P&L ₹5,25,806
+9. @trend_rider_94 | BSE Sensex Options | PE 75500 | +18.01%  | ₹27.04→₹31.91   | P&L ₹3,216
+10. @spread_king_59| BSE Sensex Options | CE 76500 | +14.73%  | ₹13.37→₹15.34   | P&L ₹4,737
+11. @gamma_trap_45 | BSE Sensex Options | CE 75800 | +14.31%  | ₹304.25→₹347.80 | P&L ₹3,484
+12. @vol_king_92   | Nifty 50 Options   | CE 23200 | +12.95%  | ₹69.63→₹78.65   | P&L ₹1,758
+13. @scalp_lord_73 | BSE Sensex Options | CE 75500 | +12.69%  | ₹266.36→₹300.15 | P&L ₹54,077
+14. @zetatrade_18  | Nifty 50 Options   | CE 23000 | +12.46%  | ₹313.81→₹352.90 | P&L ₹30,492
+15. @zetatrade_18  | Nifty 50 Options   | CE 23000 | +12.29%  | ₹314.06→₹352.65 | P&L ₹12,542
+16. @gamma_trap_45 | BSE Sensex Options | PE 75800 | +10.63%  | ₹266.32→₹294.62 | P&L ₹1,132
+17. @zetatrade_18  | Nifty 50 Options   | CE 23200 | +10.13%  | ₹156.90→₹172.80 | P&L ₹1,034
+18. @scalp_lord_73 | BSE Sensex Options | CE 75500 | +9.99%   | ₹320.77→₹352.82 | P&L ₹51,280
+19. @silent_bull_71| BSE Sensex Options | CE 75800 | +9.73%   | ₹270.52→₹296.83 | P&L ₹26,310
+20. @zetatrade_18  | Nifty 50 Options   | CE 23000 | +8.45%   | ₹299.90→₹325.25 | P&L ₹8,239
+
+Macro context for all trades: "US-Iran ceasefire signal on 25 Mar 2026 sent 
+Sensex up 1,205 pts (+1.6%) with sharp intraday swings. Crude fell below $100. 
+HDFC Bank +2.7%, L&T +3.8%, Bajaj Finance +3.8% led the rally. TCS −0.86%, 
+Tech Mahindra −1.66% lagged. India HSBC PMI fell to 56.5 (4-month low)."
+
+---
+
+Please scaffold the complete project with:
+1. All folder structure and config files (package.json, tsconfig, .env.example)
+2. All Mongoose models
+3. All Express routes and middleware
+4. The complete Bull worker / Moneyfeed engine
+5. All Next.js pages and components
+6. Tailwind config with the design tokens above
+7. A seed script (backend/src/seed.ts) using the data above
+8. A README.md with setup instructions
+
+Make it production-quality with proper error handling, TypeScript throughout,
+and environment variable configuration.
+
+---
+
+## What Claude Code will do
+
+It will read this prompt and autonomously create every file — models, routes, components, configs, the full engine — asking you clarifying questions if needed and running commands like `npm install` as it goes.
+
+## Tips for best results
+
+**Run it in stages if needed** — if the output is very large, you can break it into two prompts:
+- First: *"Scaffold the backend only"*
+- Then: *"Now build the frontend"*
+
+**After scaffolding, follow up with:**
+Connect the frontend to the backend API, add loading states, 
+and make the feed page fetch live data from GET /api/feed
+
+**For the file upload flow specifically:**
+Implement the XLS upload and Bull job queue end-to-end, 
+including the Moneyfeed engine worker

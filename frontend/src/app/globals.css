@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+:root {
+  /* Moneyfeed (consumer) tokens */
+  --mf-bg: #f2f4f8;
+  --mf-card: #ffffff;
+  --mf-border: #e3e8f0;
+  --mf-accent: #1a6bff;
+  --mf-accent-light: #e8f0ff;
+  --mf-green: #00b870;
+  --mf-green-light: #e6f7f1;
+  --mf-red: #ef4444;
+  --mf-red-light: #fef2f2;
+  --mf-gold: #f59e0b;
+  --mf-gold-light: #fef3c7;
+  --mf-purple: #7c3aed;
+  --mf-purple-light: #ede9fe;
+  --mf-orange: #f97316;
+  --mf-text: #0d1421;
+  --mf-text2: #4b5a72;
+  --mf-muted: #94a3b8;
+
+  /* Moneyfed Admin tokens (dark) */
+  --ad-bg: #0c0e13;
+  --ad-panel: #13161f;
+  --ad-panel2: #181c28;
+  --ad-border: rgba(255, 255, 255, 0.07);
+  --ad-border2: rgba(255, 255, 255, 0.12);
+  --ad-accent: #4f8fff;
+  --ad-accent-glow: rgba(79, 143, 255, 0.15);
+  --ad-green: #00c97a;
+  --ad-green-glow: rgba(0, 201, 122, 0.12);
+  --ad-yellow: #f5c842;
+  --ad-red: #ff5757;
+  --ad-text: #e8ecf4;
+  --ad-text2: #8b93a8;
+}
+
+@theme inline {
+  --font-sans: var(--font-mf-body);
+  --font-mono: var(--font-mf-mono);
+  --font-heading: var(--font-mf-heading);
+
+  --color-mf-bg: var(--mf-bg);
+  --color-mf-card: var(--mf-card);
+  --color-mf-border: var(--mf-border);
+  --color-mf-accent: var(--mf-accent);
+  --color-mf-accent-light: var(--mf-accent-light);
+  --color-mf-green: var(--mf-green);
+  --color-mf-green-light: var(--mf-green-light);
+  --color-mf-red: var(--mf-red);
+  --color-mf-red-light: var(--mf-red-light);
+  --color-mf-gold: var(--mf-gold);
+  --color-mf-gold-light: var(--mf-gold-light);
+  --color-mf-purple: var(--mf-purple);
+  --color-mf-purple-light: var(--mf-purple-light);
+  --color-mf-orange: var(--mf-orange);
+  --color-mf-text: var(--mf-text);
+  --color-mf-text2: var(--mf-text2);
+  --color-mf-muted: var(--mf-muted);
+
+  --color-ad-bg: var(--ad-bg);
+  --color-ad-panel: var(--ad-panel);
+  --color-ad-panel2: var(--ad-panel2);
+  --color-ad-border: var(--ad-border);
+  --color-ad-border2: var(--ad-border2);
+  --color-ad-accent: var(--ad-accent);
+  --color-ad-accent-glow: var(--ad-accent-glow);
+  --color-ad-green: var(--ad-green);
+  --color-ad-green-glow: var(--ad-green-glow);
+  --color-ad-yellow: var(--ad-yellow);
+  --color-ad-red: var(--ad-red);
+  --color-ad-text: var(--ad-text);
+  --color-ad-text2: var(--ad-text2);
+}
+
+body {
+  font-family: var(--font-mf-body), system-ui, -apple-system, Segoe UI, Roboto,
+    Arial, sans-serif;
+  background: var(--mf-bg);
+  color: var(--mf-text);
+}
+
+.ad-body {
+  font-family: var(--font-ad-body), system-ui, -apple-system, Segoe UI, Roboto,
+    Arial, sans-serif;
+}
+
+.ad-heading {
+  font-family: var(--font-mf-heading), system-ui, -apple-system, Segoe UI,
+    Roboto, Arial, sans-serif;
+}
+
+.ad-mono {
+  font-family: var(--font-ad-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.mf-heading {
+  font-family: var(--font-mf-heading), system-ui, -apple-system, Segoe UI,
+    Roboto, Arial, sans-serif;
+}
+
+.mf-mono {
+  font-family: var(--font-mf-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Optional: nicer default text rendering */
+html {
+  text-rendering: optimizeLegibility;
+}

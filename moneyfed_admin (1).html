@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moneyfed Admin — InCred Ops</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0e13;
+    --panel: #13161f;
+    --panel2: #181c28;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --accent: #4f8fff;
+    --accent-glow: rgba(79,143,255,0.15);
+    --green: #00c97a;
+    --green-glow: rgba(0,201,122,0.12);
+    --yellow: #f5c842;
+    --red: #ff5757;
+    --text: #e8ecf4;
+    --text2: #8b93a8;
+    --mono: 'IBM Plex Mono', monospace;
+    --heading: 'Syne', sans-serif;
+    --body: 'Manrope', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+  }
+
+  .sidebar-logo {
+    padding: 22px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-text {
+    font-family: var(--heading);
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+  }
+  .logo-text span { color: var(--accent); }
+  .logo-sub {
+    font-size: 10px;
+    color: var(--text2);
+    font-family: var(--mono);
+    margin-top: 3px;
+    letter-spacing: 0.5px;
+  }
+
+  .sidebar-nav {
+    padding: 16px 10px;
+    flex: 1;
+  }
+  .nav-section-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text2);
+    padding: 6px 10px 6px;
+    margin-top: 8px;
+  }
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+  }
+  .nav-link:hover { background: var(--panel2); color: var(--text); }
+  .nav-link.active {
+    background: var(--accent-glow);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .nav-link .icon { font-size: 15px; width: 18px; text-align: center; }
+
+  .sidebar-footer {
+    padding: 16px 14px;
+    border-top: 1px solid var(--border);
+  }
+  .ops-user {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .ops-avatar {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), #7c5fff);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #fff;
+  }
+  .ops-name { font-size: 12px; font-weight: 600; }
+  .ops-role { font-size: 10px; color: var(--text2); }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    margin-left: 220px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Top bar */
+  .topbar {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .topbar-title {
+    font-family: var(--heading);
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .market-status {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 600;
+    color: var(--red);
+    background: rgba(255,87,87,0.1);
+    border: 1px solid rgba(255,87,87,0.2);
+    border-radius: 20px;
+    padding: 4px 10px;
+  }
+  .market-status.closed { color: var(--red); }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); }
+
+  .topbar-date {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  /* Content area */
+  .content { padding: 24px 28px; }
+
+  /* ── PIPELINE STEPS ── */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 28px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    overflow-x: auto;
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 120px;
+  }
+  .step-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+    border: 2px solid var(--border2);
+    color: var(--text2);
+    background: var(--panel2);
+  }
+  .step.done .step-num { background: var(--green); border-color: var(--green); color: #000; }
+  .step.active .step-num { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 0 12px var(--accent-glow); }
+
+  .step-info {}
+  .step-label { font-size: 12px; font-weight: 600; color: var(--text2); }
+  .step.done .step-label { color: var(--green); }
+  .step.active .step-label { color: var(--accent); }
+  .step-desc { font-size: 10px; color: var(--text2); margin-top: 1px; opacity: 0.7; }
+
+  .step-arrow {
+    font-size: 14px;
+    color: var(--border2);
+    padding: 0 10px;
+    flex-shrink: 0;
+  }
+
+  /* ── GRID LAYOUT ── */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .card-head {
+    padding: 14px 18px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-title {
+    font-family: var(--heading);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+  }
+  .card-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .badge-green { background: var(--green-glow); color: var(--green); border: 1px solid rgba(0,201,122,0.2); }
+  .badge-yellow { background: rgba(245,200,66,0.1); color: var(--yellow); border: 1px solid rgba(245,200,66,0.2); }
+  .badge-blue { background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(79,143,255,0.2); }
+  .badge-red { background: rgba(255,87,87,0.1); color: var(--red); border: 1px solid rgba(255,87,87,0.2); }
+  .card-body { padding: 16px 18px; }
+
+  /* ── UPLOAD ZONE ── */
+  .upload-zone {
+    border: 2px dashed var(--border2);
+    border-radius: 10px;
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--panel2);
+    position: relative;
+  }
+  .upload-zone:hover, .upload-zone.drag {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+  }
+  .upload-icon { font-size: 36px; margin-bottom: 10px; }
+  .upload-title {
+    font-family: var(--heading);
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .upload-sub { font-size: 12px; color: var(--text2); margin-bottom: 14px; line-height: 1.5; }
+  .upload-formats {
+    display: flex; justify-content: center; gap: 8px; margin-bottom: 16px;
+  }
+  .fmt-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--panel);
+    border: 1px solid var(--border2);
+    color: var(--text2);
+  }
+  .upload-btn {
+    display: inline-block;
+    padding: 9px 22px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--body);
+  }
+  .upload-btn:hover { background: #3a6fd4; box-shadow: 0 0 20px var(--accent-glow); }
+
+  /* File selected state */
+  .file-selected {
+    background: var(--green-glow);
+    border: 2px solid rgba(0,201,122,0.3);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .file-icon { font-size: 22px; }
+  .file-name { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--green); }
+  .file-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .file-remove { margin-left: auto; font-size: 16px; color: var(--text2); cursor: pointer; }
+
+  /* ── REQUIRED COLUMNS ── */
+  .col-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .col-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    background: var(--panel2);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .col-item .tick { color: var(--green); font-size: 12px; }
+  .col-name { font-family: var(--mono); font-size: 11px; color: var(--text2); }
+
+  /* ── VALIDATION RESULTS ── */
+  .validation-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .validation-row:last-child { border-bottom: none; }
+  .val-icon { font-size: 14px; width: 18px; text-align: center; }
+  .val-label { flex: 1; color: var(--text2); }
+  .val-result { font-family: var(--mono); font-size: 11px; font-weight: 600; }
+  .val-ok { color: var(--green); }
+  .val-warn { color: var(--yellow); }
+  .val-err { color: var(--red); }
+
+  /* ── STATS ROW ── */
+  .stat-box {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .stat-box-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+  .stat-box-value {
+    font-family: var(--heading);
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .stat-box-sub { font-size: 11px; color: var(--text2); margin-top: 3px; }
+
+  /* ── PREVIEW TABLE ── */
+  .preview-table-wrap {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  thead tr {
+    background: var(--panel2);
+    border-bottom: 1px solid var(--border2);
+  }
+  th {
+    padding: 10px 12px;
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text2);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    white-space: nowrap;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--panel2); }
+  .td-ticker { font-family: var(--mono); font-weight: 600; color: var(--accent); }
+  .td-return { font-family: var(--mono); font-weight: 700; color: var(--green); }
+  .td-rank { font-family: var(--mono); font-weight: 700; color: var(--yellow); }
+  .td-user { font-size: 11px; color: var(--text2); }
+  .td-smart { display: inline-block; background: var(--accent-glow); color: var(--accent); font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; }
+
+  /* ── ACTION BUTTONS ── */
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: var(--body);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #3a6fd4; box-shadow: 0 0 20px var(--accent-glow); }
+  .btn-green { background: var(--green); color: #000; font-weight: 700; }
+  .btn-green:hover { opacity: 0.85; box-shadow: 0 0 20px var(--green-glow); }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text2);
+  }
+  .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
+  .btn-danger { background: rgba(255,87,87,0.15); color: var(--red); border: 1px solid rgba(255,87,87,0.3); }
+
+  /* ── PUBLISH BANNER ── */
+  .publish-banner {
+    background: linear-gradient(135deg, rgba(0,201,122,0.1), rgba(79,143,255,0.08));
+    border: 1px solid rgba(0,201,122,0.25);
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .publish-icon { font-size: 28px; }
+  .publish-title {
+    font-family: var(--heading);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 2px;
+  }
+  .publish-sub { font-size: 12px; color: var(--text2); }
+  .publish-actions { margin-left: auto; display: flex; gap: 8px; }
+
+  /* ── HISTORY TABLE ── */
+  .history-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .history-row:last-child { border-bottom: none; }
+  .hist-date { font-family: var(--mono); color: var(--text2); width: 90px; flex-shrink: 0; }
+  .hist-file { font-family: var(--mono); font-size: 11px; flex: 1; color: var(--text); }
+  .hist-rows { color: var(--text2); width: 70px; text-align: right; flex-shrink: 0; }
+  .hist-status { width: 70px; text-align: right; flex-shrink: 0; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+  /* Animations */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .card { animation: fadeIn 0.3s ease both; }
+  .card:nth-child(2) { animation-delay: 0.05s; }
+  .card:nth-child(3) { animation-delay: 0.1s; }
+
+  /* progress bar */
+  .progress-bar-bg {
+    height: 4px;
+    background: var(--panel2);
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+    border-radius: 2px;
+    transition: width 0.5s;
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">money<span>fed</span></div>
+    <div class="logo-sub">OPS CONSOLE · v1.0</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Daily Ops</div>
+    <div class="nav-link active"><span class="icon">⬆️</span> Upload & Publish</div>
+    <div class="nav-link"><span class="icon">🔍</span> Preview Feed</div>
+    <div class="nav-link"><span class="icon">📅</span> Publish History</div>
+
+    <div class="nav-section-label">Analytics</div>
+    <div class="nav-link"><span class="icon">📊</span> Engagement Stats</div>
+    <div class="nav-link"><span class="icon">👤</span> Trader Registry</div>
+    <div class="nav-link"><span class="icon">🔁</span> Conversion Funnel</div>
+
+    <div class="nav-section-label">Settings</div>
+    <div class="nav-link"><span class="icon">⚙️</span> Algorithm Config</div>
+    <div class="nav-link"><span class="icon">🔐</span> Access Control</div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="ops-user">
+      <div class="ops-avatar">RK</div>
+      <div>
+        <div class="ops-name">Rohit Kumar</div>
+        <div class="ops-role">InCred Ops Admin</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title">Daily Upload & Publish Pipeline</div>
+    <div class="topbar-right">
+      <div class="market-status closed"><span class="status-dot"></span>Market Closed</div>
+      <div class="topbar-date">THU 27 MAR 2026 · 16:32 IST</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- PIPELINE STEPS -->
+    <div class="pipeline">
+      <div class="step done">
+        <div class="step-num">✓</div>
+        <div class="step-info">
+          <div class="step-label">Upload CSV</div>
+          <div class="step-desc">File received</div>
+        </div>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step done">
+        <div class="step-num">✓</div>
+        <div class="step-info">
+          <div class="step-label">Validate</div>
+          <div class="step-desc">All checks passed</div>
+        </div>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step done">
+        <div class="step-num">✓</div>
+        <div class="step-info">
+          <div class="step-label">Anonymise</div>
+          <div class="step-desc">IDs mapped</div>
+        </div>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step active">
+        <div class="step-num">4</div>
+        <div class="step-info">
+          <div class="step-label">Run Engine</div>
+          <div class="step-desc">Preview ready</div>
+        </div>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-info">
+          <div class="step-label">Publish</div>
+          <div class="step-desc">Awaiting approval</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 1: Upload + Validation -->
+    <div class="grid-2">
+
+      <!-- Upload Card -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">📂 CSV Upload — AD-01</div>
+          <span class="card-badge badge-green">File Loaded</span>
+        </div>
+        <div class="card-body">
+          <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">📄</div>
+            <div class="upload-title">Drop your trades CSV here</div>
+            <div class="upload-sub">Drag & drop or click to browse.<br>Only .csv files accepted.</div>
+            <div class="upload-formats">
+              <span class="fmt-tag">.csv</span>
+              <span class="fmt-tag">Max 50 MB</span>
+              <span class="fmt-tag">UTF-8</span>
+            </div>
+            <button class="upload-btn">Choose File</button>
+          </div>
+
+          <div class="file-selected">
+            <div class="file-icon">✅</div>
+            <div>
+              <div class="file-name">incred_trades_27mar2026.csv</div>
+              <div class="file-meta">482,310 rows · 8 columns · 34.2 MB · Uploaded 16:28 IST</div>
+            </div>
+            <div class="file-remove">✕</div>
+          </div>
+
+          <div style="margin-top:14px;">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:4px;display:flex;justify-content:space-between;">
+              <span>Processing</span><span style="font-family:var(--mono);color:var(--green)">100%</span>
+            </div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:100%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Validation Card -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">✅ Validation Report — AD-02</div>
+          <span class="card-badge badge-green">PASSED</span>
+        </div>
+        <div class="card-body">
+
+          <div class="col-grid" style="margin-bottom:14px;">
+            <div class="col-item"><span class="tick">✓</span><span class="col-name">Trade_ID</span></div>
+            <div class="col-item"><span class="tick">✓</span><span class="col-name">User_ID</span></div>
+            <div class="col-item"><span class="tick">✓</span><span class="col-name">Ticker_Symbol</span></div>
+            <div class="col-item"><span class="tick">✓</span><span class="col-name">Entry_Price</span></div>
+            <div class="col-item"><span class="tick">✓</span><span class="col-name">Exit_Price</span></div>
+            <div class="col-item"><span class="tick">✓</span><span class="col-name">Max_Drawdown_Pct</span></div>
+            <div class="col-item"><span class="tick">✓</span><span class="col-name">Capital_Deployed</span></div>
+          </div>
+
+          <div class="validation-row">
+            <div class="val-icon">📋</div>
+            <div class="val-label">Total rows ingested</div>
+            <div class="val-result val-ok">482,310</div>
+          </div>
+          <div class="validation-row">
+            <div class="val-icon">🔻</div>
+            <div class="val-label">Filtered (Capital &lt; ₹10,000)</div>
+            <div class="val-result val-warn">−18,442</div>
+          </div>
+          <div class="validation-row">
+            <div class="val-icon">⚠️</div>
+            <div class="val-label">Malformed / null rows rejected</div>
+            <div class="val-result val-warn">−237</div>
+          </div>
+          <div class="validation-row">
+            <div class="val-icon">✅</div>
+            <div class="val-label">Eligible trades for ranking</div>
+            <div class="val-result val-ok">463,631</div>
+          </div>
+          <div class="validation-row">
+            <div class="val-icon">🕐</div>
+            <div class="val-label">Processing time</div>
+            <div class="val-result" style="color:var(--accent)">1m 42s</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 2: Engine stats -->
+    <div class="grid-3" style="margin-bottom:16px;">
+      <div class="stat-box">
+        <div class="stat-box-label">Trades Ranked</div>
+        <div class="stat-box-value" style="color:var(--accent)">463,631</div>
+        <div class="stat-box-sub">After quality filter</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Unique Traders</div>
+        <div class="stat-box-value" style="color:var(--text)">91,204</div>
+        <div class="stat-box-sub">Anonymised usernames</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Top Return Today</div>
+        <div class="stat-box-value" style="color:var(--green)">+18.4%</div>
+        <div class="stat-box-sub">TATAMOTORS · @silent_bull_99</div>
+      </div>
+    </div>
+
+    <!-- ROW 3: Preview Table -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-head">
+        <div class="card-title">🏆 Engine Preview — Top 20 + Smart Picks</div>
+        <span class="card-badge badge-blue">PREVIEW MODE</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <div class="preview-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Moneyfed Username</th>
+                <th>Ticker</th>
+                <th>Return %</th>
+                <th>Efficiency Ratio</th>
+                <th>Max Drawdown</th>
+                <th>Smart Pick</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="td-rank">🥇 1</td>
+                <td class="td-user">@silent_bull_99</td>
+                <td class="td-ticker">TATAMOTORS</td>
+                <td class="td-return">+18.4%</td>
+                <td style="font-family:var(--mono);color:var(--green)">9.2x</td>
+                <td style="font-family:var(--mono);color:var(--text2)">2.0%</td>
+                <td><span class="td-smart">⚡ #1</span></td>
+              </tr>
+              <tr>
+                <td class="td-rank">🥈 2</td>
+                <td class="td-user">@quant_ghost</td>
+                <td class="td-ticker">INFY</td>
+                <td class="td-return">+12.1%</td>
+                <td style="font-family:var(--mono);color:var(--green)">7.8x</td>
+                <td style="font-family:var(--mono);color:var(--text2)">1.6%</td>
+                <td><span class="td-smart">⚡ #2</span></td>
+              </tr>
+              <tr>
+                <td class="td-rank">🥉 3</td>
+                <td class="td-user">@delta_monk</td>
+                <td class="td-ticker">RELIANCE</td>
+                <td class="td-return">+9.7%</td>
+                <td style="font-family:var(--mono);color:var(--green)">6.5x</td>
+                <td style="font-family:var(--mono);color:var(--text2)">1.5%</td>
+                <td><span class="td-smart">⚡ #3</span></td>
+              </tr>
+              <tr>
+                <td class="td-rank" style="color:var(--text2)">4</td>
+                <td class="td-user">@zetatrade7</td>
+                <td class="td-ticker">HDFCBANK</td>
+                <td class="td-return">+8.3%</td>
+                <td style="font-family:var(--mono);color:var(--green)">5.5x</td>
+                <td style="font-family:var(--mono);color:var(--text2)">1.5%</td>
+                <td><span class="td-smart">⚡ #4</span></td>
+              </tr>
+              <tr>
+                <td class="td-rank" style="color:var(--text2)">5</td>
+                <td class="td-user">@maverick_fin</td>
+                <td class="td-ticker">WIPRO</td>
+                <td class="td-return">+7.9%</td>
+                <td style="font-family:var(--mono);color:var(--text2)">3.2x</td>
+                <td style="font-family:var(--mono);color:var(--text2)">2.5%</td>
+                <td style="color:var(--text2);font-size:11px;">—</td>
+              </tr>
+              <tr>
+                <td class="td-rank" style="color:var(--text2)">6</td>
+                <td class="td-user">@neon_xtrader</td>
+                <td class="td-ticker">BAJFINANCE</td>
+                <td class="td-return">+7.2%</td>
+                <td style="font-family:var(--mono);color:var(--text2)">2.9x</td>
+                <td style="font-family:var(--mono);color:var(--text2)">2.5%</td>
+                <td style="color:var(--text2);font-size:11px;">—</td>
+              </tr>
+              <tr>
+                <td class="td-rank" style="color:var(--text2)">7</td>
+                <td class="td-user">@alphaplay22</td>
+                <td class="td-ticker">AXISBANK</td>
+                <td class="td-return">+6.8%</td>
+                <td style="font-family:var(--mono);color:var(--text2)">2.7x</td>
+                <td style="font-family:var(--mono);color:var(--text2)">2.5%</td>
+                <td style="color:var(--text2);font-size:11px;">—</td>
+              </tr>
+              <tr>
+                <td colspan="7" style="text-align:center;color:var(--text2);font-size:11px;padding:10px;">
+                  + 13 more rows · Showing top 7 of 20
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PUBLISH BANNER -->
+    <div class="publish-banner">
+      <div class="publish-icon">🚀</div>
+      <div>
+        <div class="publish-title">Ready to Publish to Live App</div>
+        <div class="publish-sub">Top 20 leaderboard + 4 Smart Picks queued · Will replace today's 04:00 AM feed · ~1.2M users will see this</div>
+      </div>
+      <div class="publish-actions">
+        <button class="btn btn-ghost">👁 Full Preview</button>
+        <button class="btn btn-green">🚀 Publish Now — AD-05</button>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">🕓 Publish History</div>
+        <span class="card-badge badge-blue">Last 5 days</span>
+      </div>
+      <div class="card-body">
+        <div class="history-row">
+          <div class="hist-date">26 Mar 2026</div>
+          <div class="hist-file">incred_trades_26mar2026.csv</div>
+          <div class="hist-rows" style="font-family:var(--mono);font-size:11px;">479,102</div>
+          <div class="hist-status"><span class="card-badge badge-green">Published</span></div>
+        </div>
+        <div class="history-row">
+          <div class="hist-date">25 Mar 2026</div>
+          <div class="hist-file">incred_trades_25mar2026.csv</div>
+          <div class="hist-rows" style="font-family:var(--mono);font-size:11px;">451,880</div>
+          <div class="hist-status"><span class="card-badge badge-green">Published</span></div>
+        </div>
+        <div class="history-row">
+          <div class="hist-date">24 Mar 2026</div>
+          <div class="hist-file">incred_trades_24mar2026.csv</div>
+          <div class="hist-rows" style="font-family:var(--mono);font-size:11px;">398,241</div>
+          <div class="hist-status"><span class="card-badge badge-green">Published</span></div>
+        </div>
+        <div class="history-row">
+          <div class="hist-date">21 Mar 2026</div>
+          <div class="hist-file">incred_trades_21mar2026.csv</div>
+          <div class="hist-rows" style="font-family:var(--mono);font-size:11px;">12,003</div>
+          <div class="hist-status"><span class="card-badge badge-red">Failed</span></div>
+        </div>
+        <div class="history-row">
+          <div class="hist-date">20 Mar 2026</div>
+          <div class="hist-file">incred_trades_20mar2026.csv</div>
+          <div class="hist-rows" style="font-family:var(--mono);font-size:11px;">465,712</div>
+          <div class="hist-status"><span class="card-badge badge-green">Published</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
